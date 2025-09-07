@@ -1,11 +1,8 @@
 # resume-reviewer-streamlit-
 
 
+Problem statement:
 Smart Resume Reviewer
-
-19/50 Enrolled
-
-Enrolled
 
 Problem Descriptionnn
 
@@ -62,3 +59,6 @@ Bonus Features (Optional):
 - Support for multiple languages or regions.
 
 Problem Selected!
+
+How to set up & run:
+step1: create a folder and a create a file named app.py and paste the code in the 
