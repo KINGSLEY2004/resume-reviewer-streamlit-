@@ -147,3 +147,7 @@ Kingsley Joseph M (Developer – Christ University, Bengaluru)
 
 This is the official submission repository for Mission UpSkill India Hackathon 2025.
 
+<img width="1918" height="876" alt="image" src="https://github.com/user-attachments/assets/9da18935-03e0-4892-9bef-31e5703551f9" />
+<img width="1811" height="781" alt="image" src="https://github.com/user-attachments/assets/c70ec584-729f-4763-8c29-0bcac89be96d" />
+<img width="1798" height="887" alt="image" src="https://github.com/user-attachments/assets/f664e519-2982-4911-b744-cbedbf0037e0" />
+
