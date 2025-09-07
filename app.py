@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 # ==========================
 # CONFIG
 # ==========================
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("AIzaSyDf1E4BZcebrZjTMwlgYhkwIcUi6N-KKFo")
 genai.configure(api_key=GEMINI_API_KEY)
 
 st.set_page_config(
