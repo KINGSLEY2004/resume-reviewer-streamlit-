@@ -4,7 +4,7 @@
 Problem statement:
 Smart Resume Reviewer
 
-Problem Descriptionnn
+Problem Description
 
 The goal is to build an LLM-powered (Large Language Model) application that reviews resumes and offers tailored, constructive feedback for a specific job role. This tool should assist job seekers in optimizing their resumes to better align with job descriptions and industry expectations.
 
