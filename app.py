@@ -16,10 +16,8 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text
 
 def get_openai_client():
-    api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        st.error("⚠️ Add your OPENAI_API_KEY in Streamlit 'App → Settings → Secrets' (or as an env var).")
-        st.stop()
+    # ⚠️ Hardcoded API Key – works locally (don’t share or upload this to GitHub)
+    api_key = "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"
     return OpenAI(api_key=api_key)
 
 # --------- UI ----------
@@ -32,7 +30,11 @@ with col1:
 with col2:
     score_toggle = st.toggle("Show scores (0–100)", value=True)
 
-job_desc = st.text_area("📋 (Optional) Paste Job Description", height=150, placeholder="Paste the JD here for more accurate, ATS-aligned feedback…")
+job_desc = st.text_area(
+    "📋 (Optional) Paste Job Description",
+    height=150,
+    placeholder="Paste the JD here for more accurate, ATS-aligned feedback…"
+)
 
 resume_file = st.file_uploader("📄 Upload Resume (PDF or .txt)", type=["pdf", "txt"])
 
@@ -98,7 +100,6 @@ Return Markdown with clear headings and bullet points. Keep tone supportive and 
 
     # Optionally hide scorecard if toggle is off
     if not score_toggle:
-        # A light filter: remove a 'Scorecard' section if present
         import re
         feedback = re.sub(r"(?is)#+\\s*scorecard.*?(?=\\n#|$)", "", feedback).strip()
 
