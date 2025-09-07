@@ -391,12 +391,12 @@ if resume_text and job_role:
     
     with col3:
         if st.button("📄 Download Report") and st.session_state.current_feedback:
-            pdf_report = create_pdf_report(st.session_state.current_feedback, resume_text, job_role)
+            text_report = create_text_report(st.session_state.current_feedback, resume_text, job_role)
             st.download_button(
-                label="Download PDF Report",
-                data=pdf_report,
-                file_name=f"resume_review_{job_role.lower().replace(' ', '_')}.pdf",
-                mime="application/pdf"
+                label="Download Text Report",
+                data=text_report,
+                file_name=f"resume_review_{job_role.lower().replace(' ', '_')}.txt",
+                mime="text/plain"
             )
 
 # Display Feedback
