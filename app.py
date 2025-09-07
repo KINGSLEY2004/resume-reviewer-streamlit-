@@ -1,118 +1,129 @@
-import os
-import io
 import streamlit as st
-from openai import OpenAI
-import fitz  # PyMuPDF
+import google.generativeai as genai
+import os
+import pdfplumber
 
-st.set_page_config(page_title="AI Resume Reviewer", page_icon="🧠", layout="centered")
+# ==========================
+# CONFIG
+# ==========================
+# Replace with your Gemini API key
+GEMINI_API_KEY = "AIzaSyDf1E4BZcebrZjTMwlgYhkwIcUi6N-KKFo"
+genai.configure(api_key=GEMINI_API_KEY)
 
-# --------- Helpers ----------
-def extract_text_from_pdf(file_bytes: bytes) -> str:
-    text = ""
-    with fitz.open(stream=file_bytes, filetype="pdf") as doc:
-        for page in doc:
-            # "text" returns plain text; fast & reliable for most PDFs
-            text += page.get_text("text")
-    return text
-
-def get_openai_client():
-    # ⚠️ Hardcoded API Key – works locally (don’t share or upload this to GitHub)
-    api_key = "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"
-    return OpenAI(api_key=api_key)
-
-# --------- UI ----------
-st.title("🧠 AI Resume Reviewer")
-st.caption("Upload your resume, pick a target role, and get tailored, constructive feedback.")
-
-col1, col2 = st.columns(2)
-with col1:
-    job_role = st.text_input("🎯 Target Job Role (e.g., Data Scientist, Product Manager)", "")
-with col2:
-    score_toggle = st.toggle("Show scores (0–100)", value=True)
-
-job_desc = st.text_area(
-    "📋 (Optional) Paste Job Description",
-    height=150,
-    placeholder="Paste the JD here for more accurate, ATS-aligned feedback…"
+# Set Streamlit page config
+st.set_page_config(
+    page_title="AI Resume Feedback",
+    page_icon="📄",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-resume_file = st.file_uploader("📄 Upload Resume (PDF or .txt)", type=["pdf", "txt"])
+# ==========================
+# CUSTOM CSS (Dark Theme with Your Colors)
+# ==========================
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #1A1A1A;
+        color: #E0E0E0;
+    }
+    .stApp {
+        background-color: #1A1A1A;
+    }
+    h1, h2, h3, h4 {
+        color: #FFFFFF !important;
+    }
+    .stButton>button {
+        background-color: #EB1F28;
+        color: #FFFFFF;
+        border-radius: 8px;
+        padding: 0.6em 1em;
+        border: none;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #FF5A1F;
+        color: #FFFFFF;
+    }
+    .css-10trblm {
+        color: #E0E0E0 !important;
+    }
+    .stTextArea textarea {
+        background-color: #262626;
+        color: #FFFFFF;
+        border-radius: 6px;
+    }
+    .stFileUploader label {
+        color: #FF5A1F !important;
+        font-weight: bold;
+    }
+    .feedback-box {
+        background-color: #262626;
+        padding: 1.2em;
+        border-radius: 10px;
+        border-left: 5px solid #EB1F28;
+        margin-bottom: 1em;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-if st.button("Analyze Resume", type="primary"):
-    if not job_role:
-        st.warning("Please enter a target job role.")
-        st.stop()
-    if not resume_file:
-        st.warning("Please upload a resume (PDF or .txt).")
-        st.stop()
+# ==========================
+# HELPER FUNCTIONS
+# ==========================
+def extract_text_from_pdf(uploaded_file):
+    text = ""
+    with pdfplumber.open(uploaded_file) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text() + "\n"
+    return text.strip()
 
-    # Read resume text
-    with st.spinner("Extracting resume text…"):
-        if resume_file.name.lower().endswith(".pdf"):
-            file_bytes = resume_file.getvalue()
-            resume_text = extract_text_from_pdf(file_bytes)
-        else:  # .txt
-            resume_text = resume_file.read().decode("utf-8", errors="ignore")
+def get_resume_feedback(resume_text):
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    prompt = f"""
+    You are an expert technical recruiter. Review the following resume content
+    and provide structured, professional feedback.
 
-    if len(resume_text.strip()) < 50:
-        st.error("Could not extract enough text from the resume. Try a different file or a selectable-text PDF.")
-        st.stop()
+    Resume:
+    {resume_text}
 
-    client = get_openai_client()
+    Please give feedback in this format:
+    1. General Comments (Format, Structure, Contact Info)
+    2. Education Feedback
+    3. Project Feedback
+    4. Skills Feedback
+    5. Final Tips
+    """
+    response = model.generate_content(prompt)
+    return response.text
 
-    system_prompt = f"""You are an expert resume reviewer specializing in {job_role}.
-Provide concise, actionable, and section-wise feedback to improve alignment with the role and typical ATS filters.
-Return Markdown with clear headings and bullet points. Keep tone supportive and specific."""
+# ==========================
+# STREAMLIT UI
+# ==========================
+st.title("📄 AI Resume Feedback App")
 
-    user_prompt = f"""
-=== JOB ROLE ===
-{job_role}
+uploaded_file = st.file_uploader("Upload your resume (PDF or TXT)", type=["pdf", "txt"])
 
-=== JOB DESCRIPTION (Optional) ===
-{job_desc if job_desc else "N/A"}
+if uploaded_file:
+    # Extract text
+    if uploaded_file.type == "application/pdf":
+        resume_text = extract_text_from_pdf(uploaded_file)
+    else:
+        resume_text = uploaded_file.read().decode("utf-8")
 
-=== RESUME TEXT ===
-{resume_text}
+    st.subheader("📄 Extracted Resume Text")
+    st.text_area("Resume Content", resume_text, height=200)
 
-=== INSTRUCTIONS ===
-1) Give **Section-wise Feedback** for: Summary/Profile, Experience, Projects, Education, Skills, Certifications, Extras.
-2) List **Missing/Weak Keywords** compared to the job role/JD.
-3) Point out **Vague/Redundant language** and suggest rewrites (bullet points w/ strong action verbs + metrics).
-4) Formatting advice: length, order, consistency, readability for ATS.
-5) If 'Show scores' is on, include a short **Scorecard** (0–100) for: Relevance, Impact (metrics), Clarity, ATS Keywords, Formatting.
-6) End with a short **Tailored Summary** (3–5 bullets) of the top improvements to make right now.
-"""
+    if st.button("🚀 Get AI Feedback"):
+        with st.spinner("Analyzing your resume... Please wait ⏳"):
+            feedback = get_resume_feedback(resume_text)
 
-    with st.spinner("Reviewing resume with AI…"):
-        try:
-            resp = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=0.3,
-            )
-            feedback = resp.choices[0].message.content
-        except Exception as e:
-            st.error(f"OpenAI error: {e}")
-            st.stop()
+        st.success("✅ Feedback Generated!")
 
-    # Optionally hide scorecard if toggle is off
-    if not score_toggle:
-        import re
-        feedback = re.sub(r"(?is)#+\\s*scorecard.*?(?=\\n#|$)", "", feedback).strip()
-
-    st.subheader("✅ Feedback")
-    st.markdown(feedback)
-
-    # Download feedback
-    st.download_button(
-        label="⬇️ Download feedback as Markdown",
-        data=feedback.encode("utf-8"),
-        file_name="resume_feedback.md",
-        mime="text/markdown",
-    )
-
-st.markdown("---")
-st.caption("Privacy: Your resume is processed in-memory for this session only. Do not share sensitive personal data.")
+        st.markdown(f"""
+        <div class="feedback-box">
+        {feedback.replace("\n", "<br>")}
+        </div>
+        """, unsafe_allow_html=True)
