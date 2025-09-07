@@ -297,13 +297,15 @@ with tab2:
     )
 
 # Job Description (Optional)
-with st.expander("🎯 Add Job Description (Optional - for better tailoring)", expanded=False):
+job_description_expander = st.expander("🎯 Add Job Description (Optional - for better tailoring)", expanded=False)
+with job_description_expander:
     job_description = st.text_area(
         "Paste the job description here:",
         height=200,
         placeholder="Paste the complete job description to get more targeted feedback..."
     )
-else:
+
+if not job_description:
     job_description = None
 
 # Analysis Section
